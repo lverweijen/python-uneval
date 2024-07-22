@@ -16,12 +16,14 @@ Secondly, these expressions can be converted.
 
 ### Building blocks ###
 
-| Factory   | AST-class     | Example                                              |
-|-----------|---------------|------------------------------------------------------|
-| `quote`   | `ast.Name`    | `quote('a')` or `quote.a` (shortcut)                 |
-| `if_`     | `ast.IfExpr`  | `if_(quote.x >= 0, quote.x, -quote.x)`               |
-| `for_`    | `ast.GenExpr` | `for_(quote.x * quote.x, (quote.x, quote.range(5)))` |
-| `lambda_` | `ast.Lambda`  | `lambda_([quote.x], quote.x * quote.x)`              |
+| Factory       | AST-class             | Example                                         |
+|---------------|-----------------------|-------------------------------------------------|
+| `quote`       | `ast.Name`            | `quote('a')` or `quote.a` (shortcut)            |
+| `if_`         | `ast.IfExpr`          | `if_(quote.x >= 0, quote.x, -quote.x)`          |
+| `for_`        | `ast.GenExpr`         | `for_(quote.x ** 2, (quote.x, quote.range(5)))` |
+| `lambda_`     | `ast.Lambda`          | `lambda_([quote.x], quote.x * quote.x)`         |
+| `and_`, `or_` | `ast.BoolOp`          | `and_(quote.x >= 10, quote.x <= 15)`            |
+| `not_`, `in_` | `ast.Not(), ast.In()` | `not_(in_(quote.x, {1, 2, 3}))`                 |
 
 ### Converters ###
 
@@ -51,16 +53,28 @@ print(eval(to_code(z), {"x": 3, "y": 4}))  # 25
 These ideas can be used to create alternative syntax for [lambda](https://docs.python.org/3/reference/expressions.html#lambda)-functions:
 
 ```python
-from uneval import *
+from uneval import Expression, to_code, lambda_, quote
 
+x = quote.x
 
 def f_x(expr: Expression):
   """Create a lambda with parameter x."""
-  return eval(to_code(lambda_([quote.x], expr)))
-
+  return eval(to_code(lambda_([x], expr)))
 
 square = f_x(x * x)  # Same as lambda x: x * x
 print(square(5))  # => 25
+```
+
+You can also use it with [pandas](https://pandas.pydata.org/) in combination with [eval](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.eval.html#pandas.DataFrame.eval) and [query](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas.DataFrame.query):
+
+```python
+from uneval import quote as q
+
+# No syntax highlighting.
+df.eval("bmi = mass / height**2")
+
+# With syntax highlighting
+df.eval(f"bmi = {q.mass / q.height**2}")
 ```
 
 ## Similar work ##
