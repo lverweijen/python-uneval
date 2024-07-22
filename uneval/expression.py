@@ -7,6 +7,8 @@ TExpression = TypeVar("TExpression", bound="Expression")
 
 
 class Expression:
+    __slots__ = "_node"
+
     """Represents a python expression."""
     def __init__(self, node: ast.AST):
         self._node = node
@@ -89,6 +91,26 @@ class Expression:
         return str(expr)
 
 
+def and_(*values):
+    node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
+    return Expression(node)
+
+
+def or_(*values):
+    node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
+    return Expression(node)
+
+
+def not_(expr):
+    node = ast.UnaryOp(ast.Not(), to_ast(expr))
+    return Expression(node)
+
+
+def in_(element, coll):
+    node = ast.Compare(to_ast(element), [ast.In()], [to_ast(coll)])
+    return Expression(node)
+
+
 class _NameQuoter:
     """Helper to create symbols."""
     def __getattr__(self, item) -> Expression:
@@ -103,11 +125,11 @@ quote = _NameQuoter()
 
 def if_(test, body, orelse=None) -> Expression:
     """Create an if expression."""
-    test, body, orelse = to_ast(test), to_ast(body), to_ast(orelse)
+    test, body = to_ast(test), to_ast(body)
     if orelse is None:
-        node = ast.BoolOp(ast.Or, values=[ast.UnaryOp(ast.Not, test), body])
+        node = ast.BoolOp(ast.Or(), values=[ast.UnaryOp(ast.Not(), test), body])
     else:
-        node = ast.IfExp(test, body, orelse)
+        node = ast.IfExp(test, body, to_ast(orelse))
     return Expression(node)
 
 
