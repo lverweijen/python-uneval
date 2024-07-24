@@ -1,7 +1,7 @@
 import ast
 import operator
 from types import CodeType
-from typing import Hashable, List, Set, Dict, Sequence, Mapping, TypeVar, Iterable
+from typing import Hashable, List, Set, Dict, Sequence, Mapping, TypeVar, Iterable, Tuple
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -212,6 +212,8 @@ def to_ast(node) -> ast.AST:
         return node
     elif isinstance(node, Expression):
         return node._node
+    elif isinstance(node, Tuple):
+        return ast.Tuple(elts=[to_ast(x) for x in node], ctx=ast.Load())
     elif isinstance(node, Hashable):
         return ast.Constant(node)
     elif isinstance(node, List):
@@ -231,4 +233,4 @@ def to_code(node) -> CodeType:
     if not isinstance(node, ast.Expression):
         node = ast.Expression(node)
     ast.fix_missing_locations(node)
-    return compile(node, __file__, 'eval')
+    return compile(node, "<uneval.Expression>", 'eval')
