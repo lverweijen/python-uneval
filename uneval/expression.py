@@ -1,7 +1,8 @@
 import ast
 import operator
-from types import CodeType
-from typing import Hashable, List, Set, Dict, Sequence, Mapping, TypeVar, Iterable, Tuple
+from typing import Sequence, Mapping, TypeVar, Iterable
+
+from .to_ast import to_ast
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -10,8 +11,15 @@ class Expression:
     __slots__ = "_node"
 
     """Represents a python expression."""
-    def __init__(self, node: ast.AST):
-        self._node = node
+    def __init__(self, expr: ast.AST):
+        if isinstance(expr, ast.AST):
+            self._node = expr
+        elif isinstance(expr, Expression):
+            self._node = expr._node
+        elif isinstance(expr, str):
+            self._node = ast.parse(expr, 'eval')
+        else:
+            raise TypeError("String or AST expected")
 
     def _unop(op, node_cls):
         def unary(self) -> TExpression:
@@ -91,6 +99,12 @@ class Expression:
         return str(expr)
 
 
+# Declared here to avoid circular import
+@to_ast.register
+def _(node: Expression):
+    return node._node
+
+
 def and_(*values):
     node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
     return Expression(node)
@@ -123,10 +137,10 @@ class _NameQuoter:
 quote = _NameQuoter()
 
 
-def if_(test, body, orelse=None) -> Expression:
+def if_(test, body, orelse=True) -> Expression:
     """Create an if expression."""
     test, body = to_ast(test), to_ast(body)
-    if orelse is None:
+    if orelse is True:  # TODO Should we keep this optimalisation?
         node = ast.BoolOp(ast.Or(), values=[ast.UnaryOp(ast.Not(), test), body])
     else:
         node = ast.IfExp(test, body, to_ast(orelse))
@@ -191,46 +205,3 @@ def lambda_(args: Iterable[Expression | ast.Name], body) -> Expression:
         raise TypeError("args should be a sequence")
     node = ast.Lambda(args, to_ast(body))
     return Expression(node)
-
-
-def to_expression(expr) -> Expression:
-    """Convert str or ast to uneval."""
-    if isinstance(expr, Expression):
-        return expr
-
-    if isinstance(expr, str):
-        expr = ast.parse(expr, 'eval')
-    if isinstance(expr, ast.AST):
-        return Expression(expr)
-    else:
-        raise TypeError("String or AST expected")
-
-
-def to_ast(node) -> ast.AST:
-    """Convert str or uneval to ast."""
-    if isinstance(node, ast.AST):
-        return node
-    elif isinstance(node, Expression):
-        return node._node
-    elif isinstance(node, Tuple):
-        return ast.Tuple(elts=[to_ast(x) for x in node], ctx=ast.Load())
-    elif isinstance(node, Hashable):
-        return ast.Constant(node)
-    elif isinstance(node, List):
-        return ast.List(elts=[to_ast(x) for x in node], ctx=ast.Load())
-    elif isinstance(node, Set):
-        return ast.Set(to_ast(x) for x in node)
-    elif isinstance(node, Dict):
-        return ast.Dict(keys=[to_ast(k) for k in node.keys()],
-                        values=[to_ast(v) for v in node.values()])
-    else:
-        raise TypeError(f"Unsupported type: {type(node)}")
-
-
-def to_code(node) -> CodeType:
-    """Compile str, expression or ast as expression."""
-    node = to_ast(node)
-    if not isinstance(node, ast.Expression):
-        node = ast.Expression(node)
-    ast.fix_missing_locations(node)
-    return compile(node, "<uneval.Expression>", 'eval')

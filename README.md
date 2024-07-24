@@ -35,12 +35,11 @@ Secondly, these expressions can be converted.
 
 ### Converters ###
 
-| Converter       | Target      | Remark                     |
-|-----------------|-------------|----------------------------|
-| `str`           | String      | Convert to readable python |
-| `to_expression` | Expression  | Parse existing string      |
-| `to_ast`        | AST-node    | Generates AST-node         |
-| `to_code`       | Code-object | Compiles the expression    |                    
+| Converter | Target      | Remark                     |
+|-----------|-------------|----------------------------|
+| `str`     | String      | Convert to readable python |
+| `to_ast`  | AST-node    | Generate AST-node          |
+| `to_code` | Code-object | Compile the expression     |
 
 ### Examples ###
 

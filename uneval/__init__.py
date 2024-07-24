@@ -1,9 +1,14 @@
+import ast
+from types import CodeType
+
+from .expression import and_, or_, not_, in_
+from .expression import if_, for_, lambda_
+from .expression import quote, Expression
+from .to_ast import to_ast
+
 __all__ = [
-    "Expression",
     "quote",
-    "to_ast",
-    "to_expression",
-    "to_code",
+    "Expression",
     "if_",
     "for_",
     "lambda_",
@@ -11,7 +16,15 @@ __all__ = [
     "or_",
     "not_",
     "in_",
+    "to_ast",
+    "to_code",
 ]
 
-from .expression import (quote, to_ast, to_expression, Expression, to_code, if_, for_, lambda_,
-                         and_, or_, not_, in_)
+
+def to_code(node) -> CodeType:
+    """Compile str, expression or ast as expression."""
+    node = to_ast(node)
+    if not isinstance(node, ast.Expression):
+        node = ast.Expression(node)
+    ast.fix_missing_locations(node)
+    return compile(node, "<uneval.Expression>", 'eval')
