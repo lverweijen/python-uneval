@@ -17,7 +17,7 @@ class Expression:
         elif isinstance(expr, Expression):
             self._node = expr._node
         elif isinstance(expr, str):
-            self._node = ast.parse(expr, 'eval')
+            self._node = ast.parse(expr, mode='eval')
         else:
             raise TypeError("String or AST expected")
 

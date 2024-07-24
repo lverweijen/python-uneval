@@ -24,7 +24,7 @@ __all__ = [
 def to_code(node) -> CodeType:
     """Compile str, expression or ast as expression."""
     node = to_ast(node)
-    if not isinstance(node, ast.Expression):
+    if not isinstance(node, ast.mod):
         node = ast.Expression(node)
     ast.fix_missing_locations(node)
-    return compile(node, "<uneval.Expression>", 'eval')
+    return compile(node, "<uneval.Expression>", mode='eval')
