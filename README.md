@@ -22,32 +22,11 @@ pip install uneval
 Firstly, the building blocks can be used to generate expressions.
 Secondly, these expressions can be converted.
 
-### Building blocks ###
-
-| Factory       | AST-class             | Example                                         | Result                     |
-|---------------|-----------------------|-------------------------------------------------|----------------------------|
-| `quote`       | `ast.Name`            | `quote('a')` or `quote.a` (shortcut)            | `a`                        |
-| `if_`         | `ast.IfExpr`          | `if_(quote.x >= 0, quote.x, -quote.x)`          | `x if x >= 0 else -x`      |
-| `for_`        | `ast.GenExpr`         | `for_(quote.x ** 2, (quote.x, quote.range(5)))` | `(x**2 for x in range(5))` |
-| `lambda_`     | `ast.Lambda`          | `lambda_([quote.x], quote.x * quote.x)`         | `lambda x: x * x`          |
-| `and_`, `or_` | `ast.BoolOp`          | `and_(quote.x >= 10, quote.x <= 15)`            | `x >= 10 and x <= 15`      |
-| `not_`, `in_` | `ast.Not(), ast.In()` | `not_(in_(quote.x, {1, 2, 3}))`                 | `not x in {1, 2, 3}`       |
-
-### Converters ###
-
-| Converter | Target      | Remark                     |
-|-----------|-------------|----------------------------|
-| `str`     | String      | Convert to readable python |
-| `to_ast`  | AST-node    | Generate AST-node          |
-| `to_code` | Code-object | Compile the expression     |
-
 ### Examples ###
 
 ```python
-# Create variables
+# Build expressions
 x, y = quote.x, quote.y  # Shortcut for quote("x"), quote("y")
-
-# Manipulate
 z = x*x + y*y
 d = z.abs() + x.pow(3) - y.sin(x)
 
@@ -84,13 +63,32 @@ square = f_x(x * x)  # Same as: `lambda x: x * x`
 print(square(5))  # => 25
 ```
 
+### Building blocks ###
+
+| Factory       | AST-class             | Example                                         | Result                     |
+|---------------|-----------------------|-------------------------------------------------|----------------------------|
+| `quote`       | `ast.Name`            | `quote('a')` or `quote.a` (shortcut)            | `a`                        |
+| `if_`         | `ast.IfExpr`          | `if_(quote.x >= 0, quote.x, -quote.x)`          | `x if x >= 0 else -x`      |
+| `for_`        | `ast.GenExpr`         | `for_(quote.x ** 2, (quote.x, quote.range(5)))` | `(x**2 for x in range(5))` |
+| `lambda_`     | `ast.Lambda`          | `lambda_([quote.x], quote.x * quote.x)`         | `lambda x: x * x`          |
+| `and_`, `or_` | `ast.BoolOp`          | `and_(quote.x >= 10, quote.x <= 15)`            | `x >= 10 and x <= 15`      |
+| `not_`, `in_` | `ast.Not(), ast.In()` | `not_(in_(quote.x, {1, 2, 3}))`                 | `not x in {1, 2, 3}`       |
+
+### Converters ###
+
+| Converter | Target      | Remark                     |
+|-----------|-------------|----------------------------|
+| `str`     | String      | Convert to readable python |
+| `to_ast`  | AST-node    | Generate AST-node          |
+| `to_code` | Code-object | Compile the expression     |
+
 
 ## Similar work ##
 
 Libraries that implement something similar:
 - [Macropy](https://github.com/lihaoyi/macropy) has [quasiquote](https://macropy3.readthedocs.io/en/latest/reference.html#quasiquote).
-- [Polars](https://docs.pola.rs/user-guide/expressions/) - Writing `col.x` creates something like this `Expression`-object.
 - [SymPy](https://www.sympy.org/en/index.html) - Symbolic manipulation, but its representation is different from Python.
+- [Polars](https://docs.pola.rs/user-guide/expressions/) - Writing `col.x` creates something like this `Expression`-object.
 
 Other:
 - [Fixing lambda](https://stupidpythonideas.blogspot.com/2014/02/fixing-lambda.html) - A blog post about alternative lambda syntaxes.
