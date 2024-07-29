@@ -17,7 +17,7 @@ class Expression:
         elif isinstance(expr, Expression):
             self._node = expr._node
         elif isinstance(expr, str):
-            self._node = ast.parse(expr, mode='eval')
+            self._node = ast.parse(expr, mode='eval').body
         else:
             raise TypeError("String or AST expected")
 
@@ -76,26 +76,27 @@ class Expression:
     __ne__ = _compare(operator.ne, ast.NotEq)
 
     def __getattr__(self, item) -> TExpression:
-        node = self._node
-        node = ast.Attribute(node, item, ctx=ast.Load())
+        node = ast.Attribute(self._node, item, ctx=ast.Load())
+        return Expression(node)
+
+    def __getitem__(self, item) -> TExpression:
+        node = ast.Subscript(self._node, to_ast(item), ctx=ast.Load())
         return Expression(node)
 
     def __call__(self, *args, **kwargs) -> TExpression:
-        node = self._node
         ast_args = [to_ast(arg) for arg in args]
         ast_kwargs = [
             ast.keyword(arg=to_ast(k), value=to_ast(v))
             for k, v in kwargs.items()
         ]
-        node = ast.Call(node, args=ast_args, keywords=ast_kwargs)
+        node = ast.Call(self._node, args=ast_args, keywords=ast_kwargs)
         return Expression(node)
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__}: {self}>"
 
     def __str__(self) -> str:
-        node = self._node
-        expr = ast.unparse(node)
+        expr = ast.unparse(self._node)
         return str(expr)
 
 

@@ -40,6 +40,11 @@ def _(node: dict):
 
 
 @to_ast.register
+def _(node: slice):
+    return ast.Slice(to_ast(node.start), to_ast(node.stop), to_ast(node.step))
+
+
+@to_ast.register
 def _(node: range):
     args = [to_ast(node.start), to_ast(node.stop), to_ast(node.step)]
     return ast.Call(ast.Name('range', ctx=ast.Load()), args=args, keywords=[])
