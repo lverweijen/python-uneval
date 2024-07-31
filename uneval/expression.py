@@ -2,7 +2,7 @@ import ast
 import operator
 from typing import Sequence, Mapping, TypeVar, Iterable
 
-from .to_ast import to_ast
+from .convert_code import to_ast
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -206,3 +206,7 @@ def lambda_(args: Iterable[Expression | ast.Name], body) -> Expression:
         raise TypeError("args should be a sequence")
     node = ast.Lambda(args, to_ast(body))
     return Expression(node)
+
+
+# Illegal unicode alias (not pep8-compliant, please don't tell anyone)
+λ_ = lambda_

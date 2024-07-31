@@ -48,19 +48,21 @@ df.eval("bmi = mass / height**2")
 df.eval(f"bmi = {q.mass / q.height**2}")
 ```
 
-These blocks can even be used to create alternative syntax for [lambda](https://docs.python.org/3/reference/expressions.html#lambda)-functions:
+Expressions can also be converted to [λ](https://docs.python.org/3/glossary.html#term-lambda)-functions:
 
 ```python
-from uneval import Expression, to_code, lambda_, quote
+from uneval import F, quote
 
-x = quote.x
+x, y = quote.x, quote.y
 
-def f_x(expr: Expression):
-  """Create a lambda with parameter x."""
-  return eval(to_code(lambda_([x], expr)))
+hello = F("Hello World!")
+hello()  # => "Hello World!"
 
-square = f_x(x * x)  # Same as: `lambda x: x * x`
-print(square(5))  # => 25
+plus_1 = F.x(x + 1)
+plus_1(4)  # => 5
+
+multiply = F.xy(x * y)
+multiply(5, 7)  # => 35
 ```
 
 ### Building blocks ###
@@ -76,11 +78,12 @@ print(square(5))  # => 25
 
 ### Converters ###
 
-| Converter | Target      | Remark                     |
-|-----------|-------------|----------------------------|
-| `str`     | String      | Convert to readable python |
-| `to_ast`  | AST-node    | Generate AST-node          |
-| `to_code` | Code-object | Compile the expression     |
+| Converter    | Target      | Remark                     |
+|--------------|-------------|----------------------------|
+| `str`        | String      | Convert to readable python |
+| `to_ast`     | AST-node    | Convert to AST-node        |
+| `to_code`    | Code-object | Compile the expression     |
+| `F.(params)` | Function    | Create a λ-function        |
 
 
 ## Similar work ##
