@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uneval"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
     {name = "lverweijen", email = "lauwerund@gmail.com"}
 ]
@@ -16,6 +16,8 @@ keywords = [
     "ast",
     "dsl",
     "fexpr",
+    "lambda",
+    "symbolic",
 ]
 classifiers = [
     "Intended Audience :: Developers",
@@ -33,9 +35,9 @@ classifiers = [
 license = {text = "Apache License 2.0"}
 
 [project.urls]
-Homepage = "https://github.com/lverweijen/pyuneval"
-Repository = "https://github.com/lverweijen/pyuneval"
-Issues = "https://github.com/lverweijen/pyuneval/issues"
+Homepage = "https://github.com/lverweijen/python-uneval"
+Repository = "https://github.com/lverweijen/python-uneval"
+Issues = "https://github.com/lverweijen/python-uneval/issues"
 
 [tool.setuptools.packages.find]
 include = ["uneval*"]
