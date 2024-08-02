@@ -58,8 +58,8 @@ x, y = quote.x, quote.y
 hello = F("Hello World!")
 hello()  # => "Hello World!"
 
-plus_1 = F.x(x + 1)
-plus_1(4)  # => 5
+plus1 = F.x(x + 1)
+plus1(4)  # => 5
 
 multiply = F.xy(x * y)
 multiply(5, 7)  # => 35

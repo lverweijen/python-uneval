@@ -13,6 +13,7 @@ def to_code(node) -> CodeType:
     return compile(node, "<uneval.Expression>", mode='eval')
 
 
+# Use of singledispatch is just an implementation detail (don't register other)
 @singledispatch
 def to_ast(node):
     raise TypeError(f"Unsupported type: {type(node)}")

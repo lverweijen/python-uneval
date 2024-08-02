@@ -1,10 +1,14 @@
 import inspect
 
 from .convert_code import to_ast, to_code
-from .expression import quote, λ_
+from .builders import quote, λ_
 
 
 class _FunctionFactory:
+    """Helper to create functions.
+
+    The parameters of this function can be single-letters.
+    """
     def __call__(self, body):
         """Create a lambda without parameters.
 
@@ -43,6 +47,7 @@ class _FunctionFactory:
             locals, globals = {}, {}
 
         def accept_body(body):
+            """Call with an expression to register as a body."""
             return eval(to_code(λ_(parameters, to_ast(body))), globals, locals)
 
         return accept_body
