@@ -86,7 +86,7 @@ from uneval import quote as q
 |----------------|-------------|----------------------------|
 | `str`          | String      | Convert to readable python |
 | `to_ast`       | AST-node    | Convert to AST-node        |
-| `to_code`      | Code-object | Compile the expression     |
+| `compiled`     | Code-object | Compile the expression     |
 | `F.parameters` | Function    | Create a λ-function        |
 
 ## Similar work ##
