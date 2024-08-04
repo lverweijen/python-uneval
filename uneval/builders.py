@@ -103,7 +103,7 @@ def fstr(*values):
         match value:
             case str():
                 output.append(to_ast(value))
-            case ast.FormattedValue():
+            case ast.Constant(str()) | ast.FormattedValue():
                 output.append(value)
             case _:
                 output.append(fmt(value))
