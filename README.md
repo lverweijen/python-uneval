@@ -82,12 +82,12 @@ from uneval import quote as q
 
 ### Converters ###
 
-| Converter      | Target      | Remark                     |
-|----------------|-------------|----------------------------|
-| `str`          | String      | Convert to readable python |
-| `to_ast`       | AST-node    | Convert to AST-node        |
-| `to_code`      | Code-object | Compile the expression     |
-| `F.parameters` | Function    | Create a λ-function        |
+| Converter                    | Target      | Remark                     |
+|------------------------------|-------------|----------------------------|
+| `str`                        | String      | Convert to readable python |
+| `to_ast`                     | AST-node    | Convert to AST-node        |
+| `compile` (alias `compile_`) | Code-object | Compile the expression     |
+| `F.parameters`               | Function    | Create a λ-function        |
 
 ## Similar work ##
 

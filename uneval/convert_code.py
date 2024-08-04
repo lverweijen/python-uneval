@@ -1,16 +1,9 @@
 import ast
-from functools import singledispatch
 from collections.abc import Hashable
-from types import CodeType
+from functools import singledispatch
 
-
-def to_code(node) -> CodeType:
-    """Compile str, expression or ast as expression."""
-    node = to_ast(node)
-    if not isinstance(node, ast.mod):
-        node = ast.Expression(node)
-    ast.fix_missing_locations(node)
-    return compile(node, "<uneval.Expression>", mode='eval')
+# Make built-in compile extensible
+compile = compile_ = singledispatch(compile)
 
 
 # Use of singledispatch is just an implementation detail (don't register other)

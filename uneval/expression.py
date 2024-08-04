@@ -1,8 +1,9 @@
 import ast
 import operator
+from types import CodeType
 from typing import TypeVar
 
-from .convert_code import to_ast
+from .convert_code import to_ast, compile_
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -104,5 +105,21 @@ class Expression:
 
 # Declared here to avoid circular import
 @to_ast.register
-def _(node: Expression):
-    return node._node
+def _(exp: Expression) -> ast.AST:
+    return exp._node
+
+
+@compile_.register
+def _(
+    exp: Expression,
+    filename="<uneval.Expression>",
+    mode="eval",
+    *,
+    compile=compile
+) -> CodeType:
+    """Compile str, expression or ast as expression."""
+    node = exp._node
+    if not isinstance(node, ast.mod):
+        node = ast.Expression(node)
+    ast.fix_missing_locations(node)
+    return compile(node, filename, mode=mode)
