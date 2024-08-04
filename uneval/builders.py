@@ -1,27 +1,27 @@
 import ast
 from typing import Sequence, Mapping, Iterable
 
-from .convert_code import to_ast
+from .convert_code import uneval
 from .expression import Expression
 
 
 def and_(*values):
-    node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
+    node = ast.BoolOp(ast.And(), [uneval(expr) for expr in values])
     return Expression(node)
 
 
 def or_(*values):
-    node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
+    node = ast.BoolOp(ast.And(), [uneval(expr) for expr in values])
     return Expression(node)
 
 
 def not_(expr):
-    node = ast.UnaryOp(ast.Not(), to_ast(expr))
+    node = ast.UnaryOp(ast.Not(), uneval(expr))
     return Expression(node)
 
 
 def in_(element, coll):
-    node = ast.Compare(to_ast(element), [ast.In()], [to_ast(coll)])
+    node = ast.Compare(uneval(element), [ast.In()], [uneval(coll)])
     return Expression(node)
 
 
@@ -39,17 +39,17 @@ quote = _NameQuoter()
 
 def if_(test, body, orelse=True) -> Expression:
     """Create an if expression."""
-    test, body = to_ast(test), to_ast(body)
+    test, body = uneval(test), uneval(body)
     if orelse is True:  # TODO Should we keep this optimalisation?
         node = ast.BoolOp(ast.Or(), values=[ast.UnaryOp(ast.Not(), test), body])
     else:
-        node = ast.IfExp(test, body, to_ast(orelse))
+        node = ast.IfExp(test, body, uneval(orelse))
     return Expression(node)
 
 
 def for_(element, *generators, type=None) -> Expression:
     """Create a for-comprehension."""
-    element = to_ast(element)
+    element = uneval(element)
     generators = [_comprehension(gen) for gen in generators]
 
     if type is None or type is iter:
@@ -72,9 +72,9 @@ def _comprehension(comp):
         return comp
     elif isinstance(comp, Sequence):
         [target, iter, *ifs] = comp
-        target = _ContextReplacer(ast.Store()).visit(to_ast(target))
-        ifs = [to_ast(e) for e in ifs]
-        return ast.comprehension(to_ast(target), to_ast(iter), ifs, is_async=False)
+        target = _ContextReplacer(ast.Store()).visit(uneval(target))
+        ifs = [uneval(e) for e in ifs]
+        return ast.comprehension(uneval(target), uneval(iter), ifs, is_async=False)
     elif isinstance(comp, Mapping):
         return ast.comprehension(**comp)
     else:
@@ -102,8 +102,8 @@ def fstr(*values):
     for value in values:
         match value:
             case str():
-                output.append(to_ast(value))
-            case ast.FormattedValue():
+                output.append(uneval(value))
+            case ast.Constant(str()) | ast.FormattedValue():
                 output.append(value)
             case _:
                 output.append(fmt(value))
@@ -114,13 +114,13 @@ def fstr(*values):
 def fmt(value, format_spec=None, conversion=-1):
     """Format a values using format_spec."""
     if format_spec is not None:
-        format_spec = to_ast(format_spec)
+        format_spec = uneval(format_spec)
 
         if not isinstance(format_spec, ast.JoinedStr):
             format_spec = ast.JoinedStr(values=[format_spec])
 
     return ast.FormattedValue(
-        to_ast(value),
+        uneval(value),
         conversion=conversion,
         format_spec=format_spec)
 
@@ -128,11 +128,11 @@ def fmt(value, format_spec=None, conversion=-1):
 def lambda_(args: Iterable[Expression | ast.Name], body) -> Expression:
     """Generate a lambda expression."""
     if isinstance(args, Iterable):
-        args = [ast.arg(arg=to_ast(arg).id) for arg in args]
+        args = [ast.arg(arg=uneval(arg).id) for arg in args]
         args = ast.arguments(posonlyargs=[], args=args, kwonlyargs=[], kw_defaults=[], defaults=[])
     elif not isinstance(args, ast.arguments):
         raise TypeError("args should be a sequence")
-    node = ast.Lambda(args, to_ast(body))
+    node = ast.Lambda(args, uneval(body))
     return Expression(node)
 
 

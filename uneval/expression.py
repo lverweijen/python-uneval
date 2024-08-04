@@ -2,7 +2,7 @@ import ast
 import operator
 from typing import TypeVar
 
-from .convert_code import to_ast, compiled
+from .convert_code import uneval, compiled
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -33,13 +33,13 @@ class Expression:
 
     def _binop(op, node_cls):
         def forward(self, other) -> TExpression:
-            left, right = self._node, to_ast(other)
+            left, right = self._node, uneval(other)
             return Expression(ast.BinOp(left, node_cls(), right))
         forward.__name__ = "__" + op.__name__ + "__"
         forward.__doc__ = f"""Generate a new expression applying {op.__name__}"""
 
         def backward(self, other) -> TExpression:
-            left, right = self._node, to_ast(other)
+            left, right = self._node, uneval(other)
             return Expression(ast.BinOp(right, node_cls(), left))
         backward.__name__ = "__" + op.__name__ + "__"
         backward.__doc__ = f"""Generate a new expression applying {op.__name__}"""
@@ -48,7 +48,7 @@ class Expression:
 
     def _compare(op, node_cls):
         def compare(self, other) -> TExpression:
-            left, right = self._node, to_ast(other)
+            left, right = self._node, uneval(other)
             return Expression(ast.Compare(left, [node_cls()], [right]))
         compare.__name__ = "__" + op.__name__ + "__"
         compare.__doc__ = f"""Generate a new expression applying {op.__name__}"""
@@ -82,13 +82,13 @@ class Expression:
         return Expression(node)
 
     def __getitem__(self, item) -> TExpression:
-        node = ast.Subscript(self._node, to_ast(item), ctx=ast.Load())
+        node = ast.Subscript(self._node, uneval(item), ctx=ast.Load())
         return Expression(node)
 
     def __call__(self, *args, **kwargs) -> TExpression:
-        ast_args = [to_ast(arg) for arg in args]
+        ast_args = [uneval(arg) for arg in args]
         ast_kwargs = [
-            ast.keyword(arg=to_ast(k), value=to_ast(v))
+            ast.keyword(arg=uneval(k), value=uneval(v))
             for k, v in kwargs.items()
         ]
         node = ast.Call(self._node, args=ast_args, keywords=ast_kwargs)
@@ -102,7 +102,7 @@ class Expression:
 
 
 # Declared here to avoid circular import
-@to_ast.register
+@uneval.register
 def _(exp: Expression) -> ast.AST:
     return exp._node
 
