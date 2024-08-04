@@ -2,7 +2,7 @@ import ast
 import operator
 from typing import TypeVar
 
-from .convert_code import to_ast
+from .convert_code import to_ast, compiled
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -98,11 +98,20 @@ class Expression:
         return f"<{type(self).__name__}: {self}>"
 
     def __str__(self) -> str:
-        expr = ast.unparse(self._node)
-        return str(expr)
+        return ast.unparse(self._node)
 
 
 # Declared here to avoid circular import
 @to_ast.register
-def _(node: Expression):
-    return node._node
+def _(exp: Expression) -> ast.AST:
+    return exp._node
+
+
+@compiled.register
+def _(exp: Expression, filename="<uneval.Expression>", mode="eval"):
+    """Extend compiled (compile) to handle Expressions."""
+    node = exp._node
+    if not isinstance(node, ast.mod):
+        node = ast.Expression(node)
+    ast.fix_missing_locations(node)
+    return compile(node, filename, mode=mode)

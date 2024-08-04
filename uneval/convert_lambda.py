@@ -1,6 +1,6 @@
 import inspect
 
-from .convert_code import to_ast, to_code
+from .convert_code import to_ast, compiled
 from .builders import quote, λ_
 
 
@@ -24,7 +24,7 @@ class _FunctionFactory:
         else:
             locals, globals = {}, {}
 
-        return eval(to_code(λ_((), to_ast(body))), globals, locals)
+        return eval(compiled(λ_((), to_ast(body))), globals, locals)
 
     def __getattr__(self, item):
         """Create a lambda with single-letter parameters.
@@ -48,7 +48,7 @@ class _FunctionFactory:
 
         def accept_body(body):
             """Call with an expression to register as a body."""
-            return eval(to_code(λ_(parameters, to_ast(body))), globals, locals)
+            return eval(compiled(λ_(parameters, to_ast(body))), globals, locals)
 
         return accept_body
 

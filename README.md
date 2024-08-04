@@ -25,14 +25,17 @@ Secondly, these expressions can be converted.
 ### Examples ###
 
 ```python
+import ast
+from uneval import quote, to_ast, compiled
+
 # Build expressions
 x, y = quote.x, quote.y  # Shortcut for quote("x"), quote("y")
-z = x*x + y*y
+z = x * x + y * y
 
 # Convert
 print(z)  # x * x + y * y
 print(ast.dump(to_ast(z)))  # BinOp(left=BinOp(left=Name(id='x', ctx=Load()), op=Mult(), right=Name(id='x', ctx=Load())), op=Add(), right=BinOp(left=Name(id='y', ctx=Load()), op=Mult(), right=Name(id='y', ctx=Load())))
-print(eval(to_code(z), {"x": 3, "y": 4}))  # 25
+print(eval(compiled(z), {"x": 3, "y": 4}))  # 25
 ```
 
 This can be used when working in [pandas](https://pandas.pydata.org/) and you want to use [eval](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.eval.html#pandas.DataFrame.eval) or [query](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas.DataFrame.query):
@@ -86,7 +89,7 @@ from uneval import quote as q
 |----------------|-------------|----------------------------|
 | `str`          | String      | Convert to readable python |
 | `to_ast`       | AST-node    | Convert to AST-node        |
-| `to_code`      | Code-object | Compile the expression     |
+| `compiled`     | Code-object | Compile the expression     |
 | `F.parameters` | Function    | Create a λ-function        |
 
 ## Similar work ##
