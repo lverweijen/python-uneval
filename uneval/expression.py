@@ -2,7 +2,7 @@ import ast
 import operator
 from typing import TypeVar
 
-from .convert_code import to_ast
+from .convert_code import to_ast, to_bytecode
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
@@ -33,14 +33,24 @@ class Expression:
 
     def _binop(op, node_cls):
         def forward(self, other) -> TExpression:
-            left, right = self._node, to_ast(other)
-            return Expression(ast.BinOp(left, node_cls(), right))
+            try:
+                left, right = self._node, to_ast(other)
+            except TypeError:
+                return NotImplemented
+            else:
+                return Expression(ast.BinOp(left, node_cls(), right))
+
         forward.__name__ = "__" + op.__name__ + "__"
         forward.__doc__ = f"""Generate a new expression applying {op.__name__}"""
 
         def backward(self, other) -> TExpression:
-            left, right = self._node, to_ast(other)
-            return Expression(ast.BinOp(right, node_cls(), left))
+            try:
+                left, right = self._node, to_ast(other)
+            except TypeError:
+                return NotImplemented
+            else:
+                return Expression(ast.BinOp(right, node_cls(), left))
+
         backward.__name__ = "__" + op.__name__ + "__"
         backward.__doc__ = f"""Generate a new expression applying {op.__name__}"""
 
@@ -48,8 +58,13 @@ class Expression:
 
     def _compare(op, node_cls):
         def compare(self, other) -> TExpression:
-            left, right = self._node, to_ast(other)
-            return Expression(ast.Compare(left, [node_cls()], [right]))
+            try:
+                left, right = self._node, to_ast(other)
+            except TypeError:
+                return NotImplemented
+            else:
+                return Expression(ast.Compare(left, [node_cls()], [right]))
+
         compare.__name__ = "__" + op.__name__ + "__"
         compare.__doc__ = f"""Generate a new expression applying {op.__name__}"""
         return compare
@@ -98,11 +113,10 @@ class Expression:
         return f"<{type(self).__name__}: {self}>"
 
     def __str__(self) -> str:
-        expr = ast.unparse(self._node)
-        return str(expr)
+        return ast.unparse(self._node)
 
 
 # Declared here to avoid circular import
 @to_ast.register
-def _(node: Expression):
-    return node._node
+def _(exp: Expression) -> ast.AST:
+    return exp._node

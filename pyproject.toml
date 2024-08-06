@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uneval"
-version = "0.0.7"
+version = "0.1.0"
 authors = [
     {name = "lverweijen", email = "lauwerund@gmail.com"}
 ]
@@ -38,6 +38,8 @@ license = {text = "Apache License 2.0"}
 Homepage = "https://github.com/lverweijen/python-uneval"
 Repository = "https://github.com/lverweijen/python-uneval"
 Issues = "https://github.com/lverweijen/python-uneval/issues"
+Changelog = "https://github.com/lverweijen/python-uneval/blob/main/changes.md"
+Pypi = "https://github.com/lverweijen/python-uneval"
 
 [tool.setuptools.packages.find]
 include = ["uneval*"]
