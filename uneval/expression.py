@@ -93,8 +93,15 @@ class Expression:
     __ne__ = _compare(operator.ne, ast.NotEq)
 
     def __getattr__(self, item) -> TExpression:
+        if item.startswith('_') and item.endswith('_'):
+            # Protocol not supported. Use quote.generic(exp) instead of generic(exp)
+            msg = f"{item} not supported on {type(self).__name__}"
+            raise AttributeError(msg, name=item, obj=self)
         node = ast.Attribute(self._node, item, ctx=ast.Load())
         return Expression(node)
+
+    # Iteration is not useful. Use quote.iter(exp) instead.
+    __iter__ = None
 
     def __getitem__(self, item) -> TExpression:
         node = ast.Subscript(self._node, to_ast(item), ctx=ast.Load())

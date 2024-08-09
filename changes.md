@@ -1,3 +1,9 @@
+# 0.1.1
+
+- Support `to_ast(None)`
+- Disallow `iter(expression)`. Use `quote.iter(expression)` instead.
+- Disallow `expression._generic_()`. Use `quote.generic(expression)` instead.
+
 # 0.1.0
 
 - Rename `to_code` to `to_bytecode`.

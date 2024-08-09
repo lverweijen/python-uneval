@@ -29,6 +29,7 @@ def _(node: ast.AST):
 @to_ast.register(bytearray)
 @to_ast.register(str)
 @to_ast.register(complex)
+@to_ast.register(type(None))
 def _(node):
     return ast.Constant(node)
 
