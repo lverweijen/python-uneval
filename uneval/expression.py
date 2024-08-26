@@ -2,7 +2,7 @@ import ast
 import operator
 from typing import TypeVar
 
-from .convert_code import to_ast, to_bytecode
+from .convert_code import to_ast
 
 TExpression = TypeVar("TExpression", bound="Expression")
 

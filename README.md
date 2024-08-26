@@ -103,7 +103,8 @@ Other:
 - [Fixing lambda](https://stupidpythonideas.blogspot.com/2014/02/fixing-lambda.html) - A blog post about alternative lambda syntaxes.
 - [Mini-lambda](https://smarie.github.io/python-mini-lambda/#see-also) - Packages to "fix" lambda.
 - [Meta](https://srossross.github.io/Meta/html/) - A few utils to work on AST's.
-- [latexify](https://github.com/google/latexify_py) - Converts python to LaTeX.
+- [latexify](https://github.com/google/latexify_py) and [pytexit](https://github.com/erwanp/pytexit) - Convert python to LaTeX.
+- [numexpr](https://github.com/pydata/numexpr) and [aesara](https://github.com/aesara-devs/aesara) / [pytensor](https://github.com/pymc-devs/pytensor) - Fast evaluation of numerical expressions.
 
 Useful references:
 - [python macros use cases](https://stackoverflow.com/questions/764412/python-macros-use-cases) - Stack-overflow discussion.

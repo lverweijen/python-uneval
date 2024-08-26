@@ -11,7 +11,7 @@ def and_(*values):
 
 
 def or_(*values):
-    node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
+    node = ast.BoolOp(ast.Or(), [to_ast(expr) for expr in values])
     return Expression(node)
 
 
