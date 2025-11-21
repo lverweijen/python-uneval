@@ -1,14 +1,10 @@
-# UnEval #
+# uneval #
 
-UnEval is a microlibrary for generating python-expressions.
+Uneval is a small library for working with python-expressions.
 
-If you ever need to use
-[eval](https://docs.python.org/3/library/functions.html#eval),
-write [macros](https://en.wikipedia.org/wiki/Macro)
-or implement [domain specific languages](https://en.wikipedia.org/wiki/Domain-specific_language),
-this library provides a better way to generate python expressions than using [strings](https://docs.python.org/3/library/stdtypes.html#str).
-Strings can contain syntax errors, make it harder to deal with parentheses and aren't syntax highlighted.
-Expressions look and act a lot like pythoncode, except that they aren't evaluated immediately.
+It makes working with expressions more intuitive than ast-objects and safer than working on strings.
+You may use it to dynamically generate code, write [macros](https://en.wikipedia.org/wiki/Macro) or implement [domain specific languages](https://en.wikipedia.org/wiki/Domain-specific_language),
+It also provides a shorthand (`F.x`) for code that heavily uses anonymous functions.
 
 ## Installation ##
 
@@ -17,82 +13,64 @@ Make sure to [install pip](https://pip.pypa.io/en/stable/installation/) then run
 pip install uneval
 ```
 
-## Usage ##
+## Usage
 
-Firstly, the building blocks can be used to generate expressions.
-Secondly, these expressions can be converted.
+### Functionality
 
-### Examples ###
+```python
+# Factory to create an expression
+expr(obj: str | ast.AST | Expression) -> Expression
+
+# Create variable x as an Expression
+var(x: str) -> Expression[ast.Name]
+var.x
+
+# Evaluate an expression
+evaluate(expr: str | Expression | ast.AST, **vars) -> Any
+
+# Create anonymous function (lambda) with parameter x
+F.x(expr: str | Expression | ast.AST) -> Callable[[Any], Any]
+
+# Convert expression to abstract syntax tree node
+to_ast(expr: Expression | ast.AST) -> ast.AST
+
+# Compile an expression
+compiled(expr: str | Expression | ast.AST | CodeType) -> CodeType
+```
+
+### Example
 
 ```python
 import ast
-from uneval import quote, to_ast, to_bytecode
+from uneval import var, evaluate, F
 
-# Build expressions
-x, y = quote.x, quote.y  # Shortcut for quote("x"), quote("y")
-z = x * x + y * y
-
-# Convert
-print(z)  # x * x + y * y
-print(ast.dump(to_ast(z)))  # BinOp(left=BinOp(left=Name(id='x', ctx=Load()), op=Mult(), right=Name(id='x', ctx=Load())), op=Add(), right=BinOp(left=Name(id='y', ctx=Load()), op=Mult(), right=Name(id='y', ctx=Load())))
-print(eval(to_bytecode(z), {"x": 3, "y": 4}))  # 25
-```
-
-This can be used when working in [pandas](https://pandas.pydata.org/) and you want to use [eval](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.eval.html#pandas.DataFrame.eval) or [query](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas.DataFrame.query):
-
-```python
-from uneval import quote as q
-
-# No syntax highlighting. Syntax checkers won't catch errors.
-df.eval("bmi = mass / height**2")
-
-# With syntax highlighting. Syntax checkers can catch errors here.
-df.eval(f"bmi = {q.mass / q.height**2}")
-```
-
-Expressions can also be converted to [λ](https://docs.python.org/3/glossary.html#term-lambda)-functions:
-
-```python
-from uneval import F, quote
-
-x, y = quote.x, quote.y
-
-hello = F("Hello World!")
-hello()  # => "Hello World!"
-
-plus1 = F.x(x + 1)
-plus1(4)  # => 5
-
-multiply = F.xy(x * y)
-multiply(5, 7)  # => 35
+>>> square_x = expr("x * x")
+>>> square_x = var.x * var.x  # alternative way of writing expressions
+>>> evaluate(square_x, x=3)
+9
+>>> square = F.x(square_x)
+>>> square(3)
+9
+>>> str(square_x)
+'x * x'
+>>> to_ast(square_x)
+ast.BinOp(ast.Name(id="x", ctx=ast.Load()), ast.Mult(), ast.Name(id="x", ctx=ast.Load()))
 ```
 
 ### Building blocks ###
 
-```python
-from uneval import quote as q
-```
+| Factory       | Example                                                 | Result                       |
+|---------------|---------------------------------------------------------|------------------------------|
+| `expr`        | `expr("a + 3")`                                         | `a + 3`                      |
+| `var`         | `var('a')` or `var.a` (shortcut)                        | `a`                          |
+| `if_`         | `if_(var.x >= 0, var.x, -var.x)`                        | `x if x >= 0 else -x`        |
+| `for_`        | `for_(var.x**2, (var.x, range(5)))`                     | `(x**2 for x in range(5))`   |
+| `lambda_`     | `lambda_([var.x], var.x * var.x)`                       | `lambda x: x * x`            |
+| `and_`, `or_` | `and_(var.x >= 10, var.x <= 15)`                        | `x >= 10 and x <= 15`        |
+| `not_`, `in_` | `not_(in_(var.x, {1, 2, 3}))`                           | `not x in {1, 2, 3}`         |
+| `fstr`, `fmt` | `fstr("sin(", var.a, ") is ", fmt(var.sin(q.a), ".3"))` | `f'sin({a}) is {sin(a):.3}'` |
 
-| Factory       | Example                                             | Result                       |
-|---------------|-----------------------------------------------------|------------------------------|
-| `quote`       | `q('a')` or `q.a` (shortcut)                        | `a`                          |
-| `if_`         | `if_(q.x >= 0, q.x, -q.x)`                          | `x if x >= 0 else -x`        |
-| `for_`        | `for_(q.x**2, (q.x, q.range(5)))`                   | `(x**2 for x in range(5))`   |
-| `lambda_`     | `lambda_([q.x], q.x * q.x)`                         | `lambda x: x * x`            |
-| `and_`, `or_` | `and_(q.x >= 10, q.x <= 15)`                        | `x >= 10 and x <= 15`        |
-| `not_`, `in_` | `not_(in_(q.x, {1, 2, 3}))`                         | `not x in {1, 2, 3}`         |
-| `fstr`, `fmt` | `fstr("sin(", q.a, ") is ", fmt(q.sin(q.a), ".3"))` | `f'sin({a}) is {sin(a):.3}'` |
-
-### Converters ###
-
-| Converter      | Target      | Remark                     |
-|----------------|-------------|----------------------------|
-| `str`          | String      | Convert to readable python |
-| `to_ast`       | AST-node    | Convert to AST-node        |
-| `to_bytecode`  | Code-object | Compile the expression     |
-| `F.parameters` | Function    | Create a λ-function        |
-
-## Similar work ##
+## Similar libraries ##
 
 Libraries that implement something similar:
 - [Macropy](https://github.com/lihaoyi/macropy) has [quasiquote](https://macropy3.readthedocs.io/en/latest/reference.html#quasiquote).

@@ -1,7 +1,8 @@
 import inspect
 
-from .convert_code import to_ast, to_bytecode
-from .builders import quote, λ_
+from .astbuild import to_ast
+from .exprbuild import λ_, var
+from .evaluation import evaluate
 
 
 class _FunctionFactory:
@@ -24,11 +25,11 @@ class _FunctionFactory:
         else:
             locals, globals = {}, {}
 
-        return eval(to_bytecode(λ_((), to_ast(body))), globals, locals)
+        return evaluate(λ_((), to_ast(body)), globals | locals)
 
     def __getattr__(self, item):
         """Create a lambda with single-letter parameters.
-        >>> x, y = quote.x, quote.y
+        >>> x, y = var.x, var.y
         >>> plus10 = F.x(x + 10)
         >>> plus10(5)
         15
@@ -36,7 +37,7 @@ class _FunctionFactory:
         >>> multiply(5, 7)
         35
         """
-        parameters = [quote(a) for a in item]
+        parameters = [var(a) for a in item]
 
         if cf := inspect.currentframe():
             # Closures only work in CPython
@@ -48,7 +49,7 @@ class _FunctionFactory:
 
         def accept_body(body):
             """Call with an expression to register as a body."""
-            return eval(to_bytecode(λ_(parameters, to_ast(body))), globals, locals)
+            return evaluate(λ_(parameters, to_ast(body)), globals | locals)
 
         return accept_body
 
