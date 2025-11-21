@@ -2,8 +2,8 @@ import ast
 from types import CodeType
 from typing import Any
 
-from uneval import Expression
-from uneval.dsl import expr, ExprType
+from .expression import Expression
+from .dsl import expr, ExprType
 
 
 def compiled(obj: ExprType | CodeType, /) -> Any:

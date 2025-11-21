@@ -1,7 +1,7 @@
 import inspect
 
 from .astbuild import to_ast
-from .exprbuild import λ_, var
+from .dsl import λ_, var
 from .evaluation import evaluate
 
 

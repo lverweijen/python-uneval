@@ -9,7 +9,7 @@ ExprType = str | ast.AST | Expression
 
 def expr(expression: ExprType) -> Expression:
     """Factory to create an expression."""
-    match expr:
+    match expression:
         case Expression():
             return expression
         case str():
@@ -19,7 +19,7 @@ def expr(expression: ExprType) -> Expression:
         case ast.AST() if not isinstance(expression, ast.mod):
             return Expression(expression)
         case _:
-            raise TypeError(f"Unable to quote {type(expression)}")
+            raise TypeError(f"Unable to create expression from {type(expression)}")
 
 
 def lit(value: Any) -> Expression:

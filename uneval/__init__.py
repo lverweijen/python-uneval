@@ -1,11 +1,15 @@
-from .builders import and_, or_, not_, in_, quote, if_, for_, lambda_, λ_, fstr, fmt
-from .convert_code import to_bytecode, to_ast
-from .convert_lambda import F, λ
+from .dsl import and_, or_, not_, in_, if_, for_, lambda_, λ_, fstr, fmt, var, expr, ExprType, lit
+from .astbuild import to_ast
+from .lambdas import F, λ
+from .evaluation import evaluate, compiled
 from .expression import Expression
 
 __all__ = [
+    "expr",
+    "evaluate",
+    "compiled",
     "Expression",
-    "to_bytecode",
+    "ExprType",
     "to_ast",
     "F",
     "λ",
@@ -13,11 +17,12 @@ __all__ = [
     "or_",
     "not_",
     "in_",
-    "quote",
     "if_",
     "for_",
     "lambda_",
     "λ_",
     "fstr",
     "fmt",
+    "var",
+    "lit",
 ]
