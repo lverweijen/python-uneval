@@ -28,14 +28,14 @@ var.x
 # Evaluate an expression
 evaluate(expr: str | Expression | ast.AST, **vars) -> Any
 
-# Create anonymous function (lambda) with parameter x
+# Compile an expression
+compiled(expr: str | Expression | ast.AST | CodeType) -> CodeType
+
+# Create anonymous function (lambda) with parameter x and expression as body
 F.x(expr: str | Expression | ast.AST) -> Callable[[Any], Any]
 
 # Convert expression to abstract syntax tree node
 to_ast(expr: Expression | ast.AST) -> ast.AST
-
-# Compile an expression
-compiled(expr: str | Expression | ast.AST | CodeType) -> CodeType
 ```
 
 ### Example
