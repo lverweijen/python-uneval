@@ -1,27 +1,26 @@
 import ast
 import operator
+from types import CodeType
 from typing import TypeVar
 
-from .convert_code import to_ast
+from .astbuild import to_ast
 
 TExpression = TypeVar("TExpression", bound="Expression")
 
 
 class Expression:
     # _node can be retrieved by as_ast(expression) or by match/case
-    __slots__ = ("_node",)
+    __slots__ = ("_node", "_compiled")
     __match_args__ = ("_node",)
 
     """Represents a python expression."""
     def __init__(self, expr: ast.AST):
-        if isinstance(expr, ast.AST):
-            self._node = expr
-        elif isinstance(expr, Expression):
-            self._node = expr._node
-        elif isinstance(expr, str):
-            self._node = ast.parse(expr, mode='eval').body
-        else:
-            raise TypeError("String or AST expected")
+        self._node = expr
+        self._compiled = None
+
+    def __ast__(self) -> ast.AST:
+        """Expose inner-AST to protocols."""
+        return self._node
 
     def _unop(op, node_cls):
         def unary(self) -> TExpression:
@@ -92,6 +91,11 @@ class Expression:
     __eq__ = _compare(operator.eq, ast.Eq)
     __ne__ = _compare(operator.ne, ast.NotEq)
 
+    def __abs__(self):
+        """Return abs(x)."""
+        node = ast.Call(ast.Name("abs", ctx=ast.Load()), [self._node])
+        return Expression(node)
+
     def __getattr__(self, item) -> TExpression:
         if item.startswith('_') and item.endswith('_'):
             # Protocol not supported. Use quote.generic(exp) instead of generic(exp)
@@ -121,6 +125,18 @@ class Expression:
 
     def __str__(self) -> str:
         return ast.unparse(self._node)
+
+    def _compile(self) -> CodeType:
+        """Return memoized code-object."""
+        if _compiled := self._compiled:
+            return _compiled
+
+        node = self._node
+        if not isinstance(node, ast.mod):
+            node = ast.Expression(node)
+        ast.fix_missing_locations(node)
+        self._compiled = compile(node, "<expression>", mode="eval")
+        return self._compiled
 
 
 # Declared here to avoid circular import

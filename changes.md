@@ -1,3 +1,20 @@
+# 0.2.0
+
+- New factory function `expr` to convert `str` or `AST` to expression.
+- New factory function `scoped` to capture an expression with context.
+- New function `evaluate` to evaluate on Expression.
+- New function `lit` to explicitly convert a literal value to an Expression.
+- New function `compiled` to compile an expression.
+- Remove function `to_bytecode`. It has been replaced by `compiled`.
+- Rename function/dsl `quote` to `var`.
+- The constructor of `Expression` has been simplified and only works with `AST`. Use `expr` if a flexible constructor is needed.
+- The functions `eval` and `F` now ignore surrounding context, unless the expression is wrapped by `scoped`.
+- The functions `eval` and `F` can now be passed additional arguments that augment the evaluation scope.
+
+Differences between `compiled` and `to_bytecode`:
+- If `compiled` is passed a string it is now interpreted as an expression, whereas `to_bytecode` interpreted it as a value.
+- If `compiled` is passed an `Expression`, the result is now cached.
+
 # 0.1.2
 
 - Fix `or_` function.

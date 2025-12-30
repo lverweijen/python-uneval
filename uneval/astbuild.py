@@ -2,19 +2,13 @@ import ast
 from functools import singledispatch
 
 
-def to_bytecode(node):
-    """Compile an expression."""
-    node = to_ast(node)
-    if not isinstance(node, ast.mod):
-        node = ast.Expression(node)
-    ast.fix_missing_locations(node)
-    return compile(node, "<uneval.Expression>", mode="eval")
-
-
 # Use of singledispatch is just an implementation detail (don't register other)
 @singledispatch
 def to_ast(node):
-    raise TypeError(f"Unsupported type: {type(node)}")
+    if dunder := getattr(node, "__ast__", None):
+        return dunder()
+    else:
+        raise TypeError(f"Unsupported type: {type(node)}")
 
 
 @to_ast.register
@@ -30,6 +24,7 @@ def _(node: ast.AST):
 @to_ast.register(str)
 @to_ast.register(complex)
 @to_ast.register(type(None))
+@to_ast.register(type(...))
 def _(node):
     return ast.Constant(node)
 

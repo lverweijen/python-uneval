@@ -1,40 +1,71 @@
 import ast
-from typing import Sequence, Mapping, Iterable
+from types import FrameType
+from typing import Sequence, Mapping, Iterable, Any
+import inspect
 
-from .convert_code import to_ast
+from .astbuild import to_ast
 from .expression import Expression
+from .scopedexpression import ScopedExpression
+
+ExprType = str | ast.AST | Expression
 
 
-def and_(*values):
+def expr(expression: ExprType) -> Expression:
+    """Factory to create an expression."""
+    match expression:
+        case Expression():
+            return expression
+        case str():
+            return Expression(ast.parse(expression, mode='eval').body)
+        case ast.Expression(body=body):
+            return Expression(body)
+        case ast.AST() if not isinstance(expression, ast.mod):
+            return Expression(expression)
+        case ScopedExpression(expression=expression):
+            return expression
+        case _:
+            raise TypeError(f"Unable to create expression from {type(expression)}")
+
+
+def scoped(expression, frame: FrameType = None):
+    """Capture expression in the current context.
+
+    frame defaults to the frame from which scoped is called.
+    Some python implementations don't support frames.
+    In this case, scoped can not be used.
+    """
+    if frame is None:
+        frame = inspect.currentframe().f_back
+    return ScopedExpression(
+        expr(expression),
+        f_globals= frame.f_globals,
+        f_locals = frame.f_locals,
+    )
+
+
+def lit(value: Any) -> Expression:
+    """Convert literal to expression."""
+    return Expression(to_ast(value))
+
+
+def and_(*values) -> Expression:
     node = ast.BoolOp(ast.And(), [to_ast(expr) for expr in values])
     return Expression(node)
 
 
-def or_(*values):
+def or_(*values) -> Expression:
     node = ast.BoolOp(ast.Or(), [to_ast(expr) for expr in values])
     return Expression(node)
 
 
-def not_(expr):
+def not_(expr) -> Expression:
     node = ast.UnaryOp(ast.Not(), to_ast(expr))
     return Expression(node)
 
 
-def in_(element, coll):
+def in_(element, coll) -> Expression:
     node = ast.Compare(to_ast(element), [ast.In()], [to_ast(coll)])
     return Expression(node)
-
-
-class _NameQuoter:
-    """Helper to create symbols."""
-    def __getattr__(self, item) -> Expression:
-        return self(item)
-
-    def __call__(self, item) -> Expression:
-        return Expression(ast.Name(item, ctx=ast.Load()))
-
-
-quote = _NameQuoter()
 
 
 def if_(test, body, orelse=True) -> Expression:
@@ -81,22 +112,7 @@ def _comprehension(comp):
         raise TypeError("Not a comprehension")
 
 
-class _ContextReplacer(ast.NodeTransformer):
-    """Replace context of whole subtree."""
-    def __init__(self, ctx):
-        self.ctx = ctx
-
-    def visit_Name(self, node):
-        node.ctx = self.ctx
-        return node
-
-    def visit_Attribute(self, node):
-        self.generic_visit(node)
-        node.ctx = self.ctx
-        return node
-
-
-def fstr(*values):
+def fstr(*values) -> Expression:
     """Build an F-string."""
     output = []
     for value in values:
@@ -138,3 +154,30 @@ def lambda_(args: Iterable[Expression | ast.Name], body) -> Expression:
 
 # Illegal unicode alias (not pep8-compliant, please don't tell anyone)
 λ_ = lambda_
+
+
+class _NameQuoter:
+    """Helper to create symbols."""
+    def __getattr__(self, name: str) -> Expression:
+        return self(name)
+
+    def __call__(self, name: str, ctx=ast.Load()) -> Expression:
+        return Expression(ast.Name(name, ctx=ctx))
+
+
+var = _NameQuoter()
+
+
+class _ContextReplacer(ast.NodeTransformer):
+    """Replace context of whole subtree."""
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def visit_Name(self, node):
+        node.ctx = self.ctx
+        return node
+
+    def visit_Attribute(self, node):
+        self.generic_visit(node)
+        node.ctx = self.ctx
+        return node
