@@ -5,7 +5,10 @@ from functools import singledispatch
 # Use of singledispatch is just an implementation detail (don't register other)
 @singledispatch
 def to_ast(node):
-    raise TypeError(f"Unsupported type: {type(node)}")
+    if dunder := getattr(node, "__ast__", None):
+        return dunder()
+    else:
+        raise TypeError(f"Unsupported type: {type(node)}")
 
 
 @to_ast.register

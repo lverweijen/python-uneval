@@ -70,6 +70,33 @@ ast.BinOp(ast.Name(id="x", ctx=ast.Load()), ast.Mult(), ast.Name(id="x", ctx=ast
 | `not_`, `in_` | `not_(in_(var.x, {1, 2, 3}))`                           | `not x in {1, 2, 3}`         |
 | `fstr`, `fmt` | `fstr("sin(", var.a, ") is ", fmt(var.sin(q.a), ".3"))` | `f'sin({a}) is {sin(a):.3}'` |
 
+### Keeping track of context ###
+
+Note that expressions don't capture context. In this case `scoped` can be used instead.
+
+```python
+x = 5
+
+# This raises an AttributeError
+evaluate(var.x + 3)
+
+# Pass any context variables along that you need.
+evaluate(var.x + 3, x=x)  # => 8
+
+# Use scoped to capture the surrounding context (including x)
+evaluate(scoped(var.x + 3))  # => 8
+```
+
+This also applies to modules:
+
+```python
+import math
+
+x = 2
+evaluate(var.math.sqrt(var.x), x=x, math=math)  # => 1.4
+evaluate(scoped(var.math.sqrt(var.x)))  # => 1.4
+```
+
 ## Similar libraries ##
 
 Libraries that implement something similar:

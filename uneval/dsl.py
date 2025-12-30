@@ -1,8 +1,11 @@
 import ast
+from types import FrameType
 from typing import Sequence, Mapping, Iterable, Any
+import inspect
 
 from .astbuild import to_ast
 from .expression import Expression
+from .scopedexpression import ScopedExpression
 
 ExprType = str | ast.AST | Expression
 
@@ -18,8 +21,26 @@ def expr(expression: ExprType) -> Expression:
             return Expression(body)
         case ast.AST() if not isinstance(expression, ast.mod):
             return Expression(expression)
+        case ScopedExpression(expression=expression):
+            return expression
         case _:
             raise TypeError(f"Unable to create expression from {type(expression)}")
+
+
+def scoped(expression, frame: FrameType = None):
+    """Capture expression in the current context.
+
+    frame defaults to the frame from which scoped is called.
+    Some python implementations don't support frames.
+    In this case, scoped can not be used.
+    """
+    if frame is None:
+        frame = inspect.currentframe().f_back
+    return ScopedExpression(
+        expr(expression),
+        f_globals= frame.f_globals,
+        f_locals = frame.f_locals,
+    )
 
 
 def lit(value: Any) -> Expression:

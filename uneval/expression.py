@@ -18,6 +18,10 @@ class Expression:
         self._node = expr
         self._compiled = None
 
+    def __ast__(self) -> ast.AST:
+        """Expose inner-AST to protocols."""
+        return self._node
+
     def _unop(op, node_cls):
         def unary(self) -> TExpression:
             node = self._node
@@ -86,6 +90,11 @@ class Expression:
     __le__ = _compare(operator.le, ast.LtE)
     __eq__ = _compare(operator.eq, ast.Eq)
     __ne__ = _compare(operator.ne, ast.NotEq)
+
+    def __abs__(self):
+        """Return abs(x)."""
+        node = ast.Call(ast.Name("abs", ctx=ast.Load()), [self._node])
+        return Expression(node)
 
     def __getattr__(self, item) -> TExpression:
         if item.startswith('_') and item.endswith('_'):

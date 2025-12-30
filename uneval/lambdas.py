@@ -1,31 +1,22 @@
-import inspect
-
 from .astbuild import to_ast
-from .dsl import λ_, var
+from .dsl import λ_, var, ExprType
 from .evaluation import evaluate
+from .scopedexpression import ScopedExpression
 
 
 class _FunctionFactory:
-    """Helper to create functions.
+    """Helper to create lambda-functions.
 
-    The parameters of this function can be single-letters.
+    The parameters of this function must be single-letters.
     """
-    def __call__(self, body):
+    def __call__(self, expression: ExprType | ScopedExpression, **kwargs):
         """Create a lambda without parameters.
 
-        >>> hello_world = F("Hello World!")
+        >>> hello_world = F(to_ast("Hello World!"))
         >>> hello_world()
         "Hello World!"
         """
-        if cf := inspect.currentframe():
-            # Closures only work in CPython
-            pf = cf.f_back
-            locals, globals = pf.f_locals, pf.f_globals
-            del cf, pf
-        else:
-            locals, globals = {}, {}
-
-        return evaluate(λ_((), to_ast(body)), globals | locals)
+        return self._make((), expression, **kwargs)
 
     def __getattr__(self, item):
         """Create a lambda with single-letter parameters.
@@ -37,22 +28,21 @@ class _FunctionFactory:
         >>> multiply(5, 7)
         35
         """
-        parameters = [var(a) for a in item]
+        parameters = [var(p) for p in item]
 
-        if cf := inspect.currentframe():
-            # Closures only work in CPython
-            pf = cf.f_back
-            locals, globals = pf.f_locals, pf.f_globals
-            del cf, pf
+        def accept_expression(expression: ExprType | ScopedExpression, **kwargs):
+            return self._make(parameters, expression, **kwargs)
+
+        return accept_expression
+
+    @staticmethod
+    def _make(parameters, expression, **kwargs):
+        if isinstance(expression, ScopedExpression):
+            λ_expr = expression.replace(expression=λ_((parameters), expression.expression))
         else:
-            locals, globals = {}, {}
+            λ_expr = λ_(parameters, expression)
 
-        def accept_body(body):
-            """Call with an expression to register as a body."""
-            return evaluate(λ_(parameters, to_ast(body)), globals | locals)
-
-        return accept_body
-
+        return evaluate(λ_expr, **kwargs)
 
 # λ is for naughty programmers. Use F for pep8-compliance.
 F = λ = _FunctionFactory()
